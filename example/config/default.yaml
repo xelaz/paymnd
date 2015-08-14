@@ -1,0 +1,87 @@
+payme:
+  # ping middleware is needet in feature when we have png backs rom vendors
+  # at now only the ping.path is in use for the middleware links
+  ping:
+    path: "/payment"
+    api:
+      apikey: "xyz123"
+      secret:
+
+  # Vendor must correct match with vendor path name
+  vendor:
+    paypal:
+      # option is reserved keyword to use as payment options
+      # option are default and can be overwrite with payment options
+      option:
+        currency: "EUR"
+
+        api:
+          host: "api.sandbox.paypal.com"
+          client_id: "YOUR PAYPAL CLIENT ID"
+          client_secret: "YOUR PAYPAL CLIENT SECRET"
+
+        redirectUrl:
+          # cancel_url is when user click back to shop
+          cancel: "/cancel"
+          success: "/success"
+          error: "/error"
+
+      # multiple methods:
+      method:
+        # payment method: payment name must match with the js file in vendor
+        paypal:
+          # method is optional if it is set, then it overwrite payment method name
+          method: "paypal"
+          # title is optional nad overwrite the hardcoded name
+          title: "Paypal Deutschland"
+
+          redirectUrl:
+            # paypal return_url/approval_link
+            approval: "/payment/paypal/execute"
+            cancel: "/payment/paypal/cancel"
+
+        # payment method: payment name must match with the js file in vendor
+        creditcard:
+          # method is optional if it is set, then it overwrite payment method name
+          method: "paypal_creditcard"
+          # title is optional nad overwrite the hardcoded name
+          title: "Paypal Kreditkarte Deutschland"
+
+  #    # single payment method: payment name must match with the js file in vendor
+  #    paypal:
+  #      # method is optional if it is set, then it overwrite payment method name
+  #      method: "paypal"
+  #      # title is optional nad overwrite the hardcodet name
+  #      title: "Paypal Deutschland"
+
+  # if you have not ready connection, then
+  # paste your mongo credentials to create own connection
+  db:
+    mongo:
+      uri:   "localhost:27017/payment"
+      options:
+        user: "root"
+        pass: ""
+
+
+
+# here we have global options only for example
+server:
+  # server name to listen is used in example or standalone
+  server: "localhost"
+  # server port where to listen
+  port: 8080
+
+  # host will be used in redirect links
+  host: "localhost"
+  protocol: "http"
+
+debug:
+  verbose: false
+  level: "payme:*"
+
+
+#########################################################
+# this is nor relavant for you and only use for example #
+#########################################################
+

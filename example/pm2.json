@@ -1,0 +1,7 @@
+[{
+  "name"      : "payment",
+  "script"    : "./example/app.js",
+  "instances" : "1",
+  "error_file" : "./example/log/error.log",
+  "out_file" : "./example/log/out.log"
+}]

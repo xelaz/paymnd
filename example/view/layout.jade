@@ -1,0 +1,33 @@
+doctype html
+html(lang="en")
+  head
+    meta(charset='utf-8')
+    title Payment Example
+    link(rel='stylesheet', href='/css/bootstrap.min.css')
+    script(src='//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js')
+    style.
+      body {
+        position: relative;
+        padding-top: 60px;
+      }
+
+  body
+    div(class='navbar navbar-inverse navbar-fixed-top')
+      div(class='container')
+        div(class="navbar-header")
+          a(class='navbar-brand', href='/') Products
+        ul(class='nav navbar-nav')
+          li
+            a(href='/checkout') Checkout
+          li
+            a(href='/overview') Order history
+    div(class='container')
+      - if(messages)
+        each msg in messages
+          div(class="alert alert-" + msg.type)
+            | #{msg.desc}
+            button(class="close", data-dismiss="alert") &times;
+      block content
+
+    script.
+      $('.close').click(function() {$('.alert').hide()});
