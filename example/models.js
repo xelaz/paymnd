@@ -1,6 +1,6 @@
 var mongoose = require('mongoose'),
   Schema = mongoose.Schema,
-  PayMe = require('../index');
+  Paymnd = require('../index');
 
 var OrderSchema = {
   orderId: String,
@@ -11,8 +11,8 @@ var OrderSchema = {
 
   status: {
     type: String,
-    enum: PayMe.Status().getEnumValues(),
-    default: PayMe.Status().getDefault()
+    enum: Paymnd.Status().getEnumValues(),
+    default: Paymnd.Status().getDefault()
   },
 
   createdAt: {
@@ -21,4 +21,4 @@ var OrderSchema = {
   }
 };
 
-module.exports.Order = PayMe.Model.Resource.model('Order', new Schema(OrderSchema));
+module.exports.Order = Paymnd.Model.Resource.model('Order', new Schema(OrderSchema));

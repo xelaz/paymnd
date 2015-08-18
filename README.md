@@ -1,6 +1,6 @@
 # Payment Server #
  
-Payme is express microservice to use external payment services.
+Paymnd is express microservice to implement external payment services.
 
 ## Requirement ##
 - mongo

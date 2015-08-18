@@ -1,7 +1,12 @@
-payme:
+paymnd:
   # ping middleware is needet in feature when we have png backs rom vendors
   # at now only the ping.path is in use for the middleware links
   ping:
+    url:
+      # host will be used in redirect links
+      host: "localhost"
+      protocol: "http"
+
     path: "/payment"
     api:
       apikey: "xyz123"
@@ -17,8 +22,8 @@ payme:
 
         api:
           host: "api.sandbox.paypal.com"
-          client_id: "YOUR PAYPAL CLIENT ID"
-          client_secret: "YOUR PAYPAL CLIENT SECRET"
+          client_id: "YOUR_PAYPAL_CLIENT_ID"
+          client_secret: "YOUR_PAYPAL_CLIENT_SECRET"
 
         redirectUrl:
           # cancel_url is when user click back to shop
@@ -64,24 +69,20 @@ payme:
         pass: ""
 
 
-
-# here we have global options only for example
 server:
   # server name to listen is used in example or standalone
   server: "localhost"
   # server port where to listen
   port: 8080
 
-  # host will be used in redirect links
-  host: "localhost"
-  protocol: "http"
-
-debug:
-  verbose: false
-  level: "payme:*"
-
 
 #########################################################
 # this is nor relavant for you and only use for example #
 #########################################################
+
+
+
+debug:
+  verbose: false
+  level: "paymnd:*"
 

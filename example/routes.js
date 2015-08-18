@@ -1,7 +1,6 @@
-var config = {},
-  PayMe = require('../index'),
+var Paymnd = require('../index'),
   async = require('async'),
-  mongoose = PayMe.Model.Resource,
+  mongoose = Paymnd.Model.Resource,
   uuid = require('node-uuid');
 
 exports.index = function (req, res) {
@@ -53,11 +52,11 @@ exports.order = function (req, res) {
   ],
   // optional callback
   function(err){
-    // results is now equal to ['one', 'two']
     if(!err) {
+      console.log('ORDER SUCCESS');
       req.flash('info', { message : [{desc: "Ihr produkt wurde erfolgreich in den Warenkorb gelegt", type: "info"}]});
     } else {
-      //console.log(err);
+      console.log('ERRR:', err);
       req.flash('info', { message : [{desc: err, type: "danger"}]});
     }
 
@@ -69,6 +68,7 @@ exports.checkoutBefore = function(req, res, next) {
   var Order = mongoose.model('Order');
 
   if(!req.session.order) {
+    console.log('SESSION: ', req.session);
     req.flash('info', { message : [{desc: 'Ihr Warenkorb ist leer', type: "danger"}]});
     return res.redirect('/');
   }
@@ -82,7 +82,7 @@ exports.checkoutBefore = function(req, res, next) {
   ],
     function(err, order) {
       res.locals.order = order;
-      res.locals.payments = PayMe.Vendor.getMethodTitles();
+      res.locals.payments = Paymnd.Vendor.getMethodTitles();
       next(err);
     });
 };
@@ -93,22 +93,19 @@ exports.checkoutGet = function (req, res) {
 };
 
 exports.checkoutPost = function(req, res) {
-  //var Order = mongoose.model('Payment');
+  //var Order = mongoose.model('Payment')
   var order = res.locals.order;
   console.log('Checkout POST');
 
   // preise müssen an das payment in cent werten übergeben werden
   var amount = order.amount * 100;
 
-  // Das ist der Api aufruf
-  PayMe.Vendor.paymentCreate(
-  {
+  Paymnd.Vendor.paymentCreate({
     orderId: order.orderId,
     amount: amount, // total price
     // Übergabe der Payment Methode, im Example kommt es als POST param
     method: req.body.payment
-  },
-  {
+  },{
     order: {
       description: 'Test Bestellung',
       itemList: [{
@@ -133,27 +130,39 @@ exports.checkoutPost = function(req, res) {
       lastName: 'Tester',
       ip: '62.157.236.170' // User IP is needed
     }
-  },
+  })
+    .catch(function(err) {
+      console.error('ERR:', JSON.stringify(err, null, 2));
+      res.render('checkout');
+    })
+    .then(function(result) {
+      if(result.status == 'OK' && result.action == 'redirect') {
+        delete req.session.order;
+        res.redirect(result.redirectUrl);
+        return;
+      } else if(result.status == 'ERROR') {
+        req.flash('info', { message : [{desc: 'Error on create payment', type: "warning"}]});
+        res.redirect('/');
+        return;
+      } else {
+        res.render('checkout');
+      }
+    });
+
+
+  /*
+  // Das ist der Api aufruf
+  Paymnd.Vendor.paymentCreate(
+    ,
+    ,
   function(err, resData) { // Callback nach dem das Payment ausgeführt wurde
     if(err) {
-      console.log('ERR:', JSON.stringify(err, null, 2));
-      req.flash('info', { message : [{desc: 'Bei der Bestellung sind Fehler aufgetretten.', type: "danger"}]});
-      res.redirect('/');
+
       return;
     }
 
-    if(resData.status == 'OK' && resData.action == 'redirect') {
-      delete req.session.order;
-      res.redirect(resData.redirectUrl);
-      return;
-    } else if(resData.status == 'ERROR') {
-      req.flash('info', { message : [{desc: 'Die Bestellung konnte nicht Ordnungsgemäß abgewikelt werden.', type: "warning"}]});
-      res.redirect('/');
-      return;
-    } else {
-      res.render('checkout');
-    }
-  });
+
+  });*/
 };
 
 exports.successGet = function (req, res) {
@@ -175,7 +184,7 @@ exports.errorGet = function (req, res) {
 exports.paymentExecuteGet = function (req, res) {
   console.log('paymentExecuteGet:', req.query);
 
-  PayMe.Vendor.paymentExecute(req.query,
+  Paymnd.Vendor.paymentExecute(req.query,
     {},
     function(err, resData) {
       res.end();
@@ -184,7 +193,7 @@ exports.paymentExecuteGet = function (req, res) {
 
 exports.overviewGet = function (req, res) {
  var Order = mongoose.model('Order'),
-    Payment = PayMe.Model.Payment.Model;
+    Payment = Paymnd.Model.Payment.Model;
 
   async.waterfall([
     function(callback){
@@ -217,18 +226,14 @@ exports.overviewGet = function (req, res) {
 exports.refundGet = function (req, res) {
   console.log('refundGet:', req.query);
 
-  PayMe.Vendor.paymentRefund({orderId:req.query.orderId},{}, function(err) {
+  Paymnd.Vendor.paymentRefund({orderId:req.query.orderId},{}, function(err) {
     if(err) {
       console.log(err);
-      req.flash('info', { message : [{desc: 'Beim stornieren ist es zu einem Fehler gekommen - ' + err, type: "danger"}]});
+      req.flash('info', { message : [{desc: 'Error on refund - ' + err, type: "danger"}]});
       res.redirect('/');
     } else {
-      req.flash('info', { message : [{desc: 'Gut storniert', type: "success"}]});
+      req.flash('info', { message : [{desc: 'Refund succesful', type: "success"}]});
       res.redirect('/');
     }
   });
-};
-
-exports.init = function(c) {
-  config = c;
 };

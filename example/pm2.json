@@ -1,7 +1,18 @@
 [{
-  "name"      : "payment",
-  "script"    : "./example/app.js",
+  "name"      : "paymnd",
+  "script"    : "./app.js",
   "instances" : "1",
-  "error_file" : "./example/log/error.log",
-  "out_file" : "./example/log/out.log"
+  "error_file" : "./log/error.log",
+  "out_file" : "./log/out.log",
+  "watch"       : true,
+  "ignore_watch": ["[\\/\\\\]\\./", "log$","runtime\\.json$"],
+  "max_restarts": 1,
+  "merge_logs"  : true,
+  "env"         : {
+    "NODE_ENV"    : "development",
+    "DEBUG"       : "paymnd:*",
+    "DEBUG_COLORS": true,
+    "NODE_APP_INSTANCE": "",
+    "NODE_CONFIG_STRICT_MODE": ""
+  }
 }]
