@@ -145,24 +145,10 @@ exports.checkoutPost = function(req, res) {
         res.redirect('/');
         return;
       } else {
-        res.render('checkout');
+        req.flash('info', { message : [{desc: 'Payment create Successful', type: "success"}]});
+        res.redirect('/');
       }
     });
-
-
-  /*
-  // Das ist der Api aufruf
-  Paymnd.Vendor.paymentCreate(
-    ,
-    ,
-  function(err, resData) { // Callback nach dem das Payment ausgeführt wurde
-    if(err) {
-
-      return;
-    }
-
-
-  });*/
 };
 
 exports.successGet = function (req, res) {
@@ -181,18 +167,18 @@ exports.errorGet = function (req, res) {
 };
 
 // diese Methode zeigt wie man selber ein Execute ausführen kann
-exports.paymentExecuteGet = function (req, res) {
+exports.executeGet = function (req, res, next) {
   console.log('paymentExecuteGet:', req.query);
 
-  Paymnd.Vendor.paymentExecute(req.query,
-    {},
-    function(err, resData) {
-      res.end();
-    });
+  Paymnd.Vendor.paymentExecute(req.query.orderId)
+    .then(function() {
+    "use strict";
+    res.redirect('/overview');
+  }).catch(next);
 };
 
 exports.overviewGet = function (req, res) {
- var Order = mongoose.model('Order'),
+  var Order = mongoose.model('Order'),
     Payment = Paymnd.Model.Payment.Model;
 
   async.waterfall([
@@ -217,23 +203,40 @@ exports.overviewGet = function (req, res) {
         callback(err, newOrders);
       });
     }
-  ], function (err, result) {
+    ], function (err, result) {
     //console.log('Res:', result);
     res.render('overview', {orders: result});
   });
 };
 
+
 exports.refundGet = function (req, res) {
   console.log('refundGet:', req.query);
 
-  Paymnd.Vendor.paymentRefund({orderId:req.query.orderId},{}, function(err) {
-    if(err) {
-      console.log(err);
-      req.flash('info', { message : [{desc: 'Error on refund - ' + err, type: "danger"}]});
-      res.redirect('/');
-    } else {
+  Paymnd.Vendor.paymentRefund(req.query.orderId)
+    .then(function() {
       req.flash('info', { message : [{desc: 'Refund succesful', type: "success"}]});
       res.redirect('/');
-    }
-  });
+    })
+    .catch(function(err) {
+      console.log('REFUND ERROR: ', err, err.stack);
+      req.flash('info', { message : [{desc: 'Error on refund - ' + err, type: "danger"}]});
+      res.redirect('/');
+    });
+};
+
+exports.cancelPaymentGet = function (req, res) {
+  console.log('cancelPaymentGet:', req.query);
+
+
+  Paymnd.Vendor.paymentCancel(req.query.orderId)
+    .then(function() {
+      req.flash('info', { message : [{desc: 'Refund succesful', type: "success"}]});
+      res.redirect('/');
+    })
+    .catch(function(err) {
+      console.log('REFUND ERROR: ', err, err.stack);
+      req.flash('info', { message : [{desc: 'Error on refund - ' + err, type: "danger"}]});
+      res.redirect('/');
+    });
 };

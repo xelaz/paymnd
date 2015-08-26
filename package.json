@@ -1,6 +1,6 @@
 {
   "name": "paymnd",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "./lib/index.js",
   "author": {
     "name": "xelaz"
@@ -14,7 +14,6 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "async": "~0.2.9",
     "bluebird": "^2.9.34",
     "debug": "^2.2.0",
     "extend": "^3.0.0",
@@ -23,6 +22,7 @@
     "paypal-rest-sdk": "^1.6.1"
   },
   "devDependencies": {
+    "async": "~0.2.9",
     "body-parser": "^1.13.3",
     "config": "^1.15.0",
     "connect-flash": "~0.1.1",

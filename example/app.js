@@ -126,6 +126,8 @@ app.get('/cancel', routes.cancelGet);
 app.get('/error', routes.errorGet);
 app.get('/overview', routes.overviewGet);
 app.get('/refund', routes.refundGet);
+app.get('/execute', routes.executeGet);
+app.get('/cancel-payment', routes.cancelPaymentGet);
 
 /**
  * use Paymnd as express middleware

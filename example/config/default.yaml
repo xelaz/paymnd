@@ -4,7 +4,7 @@ paymnd:
   ping:
     url:
       # host will be used in redirect links
-      host: "localhost"
+      host: "localhost:8080"
       protocol: "http"
 
     path: "/payment"
@@ -52,6 +52,13 @@ paymnd:
           # title is optional nad overwrite the hardcoded name
           title: "Paypal Kreditkarte Deutschland"
 
+    sepa:
+      sepa:
+        method: "sepa"
+        title: "Lastschrift"
+        option:
+          currency: "EUR"
+
   #    # single payment method: payment name must match with the js file in vendor
   #    paypal:
   #      # method is optional if it is set, then it overwrite payment method name
@@ -74,7 +81,6 @@ server:
   server: "localhost"
   # server port where to listen
   port: 8080
-
 
 #########################################################
 # this is nor relavant for you and only use for example #
