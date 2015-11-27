@@ -1,13 +1,14 @@
 extends ./layout.jade
 
 block content
-  h1 Bestellungen Übersicht
+  h1 Order history
   ul
     each item in orders
       li
-        h2= 'Produkt ' + item.order.offerId
+        h2= 'Product ' + item.order.offerId
         div= 'OrderId: ' + item.order.orderId
-        div= ' Datum: ' + item.order.createdAt
+        div= 'Order Date: ' + item.order.createdAt
+        div= 'Amount: ' + item.order.amount
         div
           strong= 'Payment Status: ' + item.payment.status
           br
@@ -18,8 +19,5 @@ block content
           strong= 'Vendor: ' + item.payment.vendor
         a.btn.btn-danger(href='/refund?orderId=' + item.order.orderId) Refund
         a.btn.btn-success(href='/execute?orderId=' + item.order.orderId) Execute
-        a.btn.btn-warning(href='/cancel-payment' +
-        '' +
-        '' +
-        '?orderId=' + item.order.orderId) Cancel
+        a.btn.btn-warning(href='/cancel-payment?orderId=' + item.order.orderId) Cancel
 

@@ -23,6 +23,7 @@ var http = require('http'),
   express = require('express'),
   routes = require('./routes'),
   session = require('express-session'),
+  FileStore = require('session-file-store')(session),
   path = require('path'),
   flash = require('connect-flash'),
   models = require('./models'),
@@ -39,6 +40,7 @@ var http = require('http'),
 debug('RegisterdVendors: %s', Paymnd.Vendor.getVendorKeys());
 debug('RegisterdPayments: %s', Paymnd.Vendor.getMethodKeys());
 debug('Payment Paypal: %s', JSON.stringify(Paymnd.Vendor.getByMethod('paypal'), false, 2));
+debug('Payment PaypalObject: %o', Paymnd.Vendor.getByMethod('paypal'));
 
 
 //var test = require('./test');
@@ -76,6 +78,16 @@ Paymnd.Model.Payment.Event.on('statusDebited', function(payment) {
   console.log('####statusDebited', payment);
 });
 
+Paymnd.Model.Payment.Event.on('statusCanceled', function(payment) {
+  Order.findOne({orderId: payment.orderId}, function(err, doc) {
+    if(err || !doc) return;
+
+    doc.status = 'cancel';
+    doc.save();
+  });
+  console.log('####statusCanceled', payment);
+});
+
 Paymnd.Model.Payment.Event.on('statusRefunded', function(payment) {
   Order.findOne({orderId: payment.orderId}, function(err, doc) {
     if(err) return;
@@ -85,7 +97,6 @@ Paymnd.Model.Payment.Event.on('statusRefunded', function(payment) {
   });
   console.log('####statusRefunded', payment);
 });
-
 
 
 var app = express();
@@ -102,11 +113,22 @@ app.set('trust proxy', 1); // trust first proxy
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(session({
+  store: new FileStore({
+    path: __dirname + '/session'
+  }),
   secret: 'abracadabra',
   resave: false,
   saveUninitialized: true
 }));
 app.use(flash());
+
+
+app.use(function (req, res, next) {
+  res.locals.session = req.session;
+  var flash = req.flash('info');
+  res.locals.messages = flash.length > 0 ? flash[0].message : null;
+  next();
+});
 
 app.use(morgan('combined'));
 app.use(errorHandler({

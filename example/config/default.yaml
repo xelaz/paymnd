@@ -4,10 +4,10 @@ paymnd:
   ping:
     url:
       # host will be used in redirect links
-      host: "localhost:8080"
+      host: "localhost:1337"
       protocol: "http"
+      pathname: "/payment"
 
-    path: "/payment"
     api:
       apikey: "xyz123"
       secret:
@@ -15,9 +15,9 @@ paymnd:
   # Vendor must correct match with vendor path name
   vendor:
     paypal:
-      # option is reserved keyword to use as payment options
-      # option are default and can be overwrite with payment options
-      option:
+      # option is reserved keyword to use as payment global options
+      # option are default and can be overwrite with method options
+      options:
         currency: "EUR"
 
         api:
@@ -35,29 +35,51 @@ paymnd:
       method:
         # payment method: payment name must match with the js file in vendor
         paypal:
-          # method is optional if it is set, then it overwrite payment method name
-          method: "paypal"
+          # methodName is optional if it's set, then it overwrite payment method name
+          methodName: "paypal"
           # title is optional nad overwrite the hardcoded name
           title: "Paypal Deutschland"
-
-          redirectUrl:
-            # paypal return_url/approval_link
-            approval: "/payment/paypal/execute"
-            cancel: "/payment/paypal/cancel"
 
         # payment method: payment name must match with the js file in vendor
         creditcard:
           # method is optional if it is set, then it overwrite payment method name
-          method: "paypal_creditcard"
+          methodName: "paypal_creditcard"
           # title is optional nad overwrite the hardcoded name
           title: "Paypal Kreditkarte Deutschland"
 
     sepa:
-      sepa:
-        method: "sepa"
-        title: "Lastschrift"
-        option:
-          currency: "EUR"
+      title: "Lastschrift"
+      options:
+        currency: "EUR"
+
+    saferpay:
+      title: "SaferPAY"
+      methodName: "saferkadabra"
+      options:
+        currency: "EUR"
+        accountId: "SAFERPAY_ACCOUNTID"
+        # additional params append to query params
+        query:
+          CCCVC: "yes"
+          CCNAME: "yes"
+          DESCRIPTION: "TEMP_DESCRIPTION"
+
+        gateway:
+          payInit: "https://www.saferpay.com/hosting/CreatePayInit.asp"
+          payConfirm: "https://www.saferpay.com/hosting/VerifyPayConfirm.asp"
+          payComplete: "https://www.saferpay.com/hosting/PayComplete.asp"
+
+        redirectUrl:
+          cancel: "/cancel"
+          success: "/success"
+          error: "/error"
+
+        # Special for testaccount: Passwort for hosting-capture neccessary.
+        # Not needed for standard-saferpay-eCommerce-accounts
+        # activate it on testing/development account
+
+        #spPassword: "PASSWORD"
+
 
   #    # single payment method: payment name must match with the js file in vendor
   #    paypal:
@@ -67,10 +89,10 @@ paymnd:
   #      title: "Paypal Deutschland"
 
   # if you have not ready connection, then
-  # paste your mongo credentials to create own connection
+  # set your mongo credentials to create own connection
   db:
     mongo:
-      uri:   "localhost:27017/payment"
+      uri:   "localhost:27017/paymnd"
       options:
         user: "root"
         pass: ""
@@ -80,7 +102,7 @@ server:
   # server name to listen is used in example or standalone
   server: "localhost"
   # server port where to listen
-  port: 8080
+  port: 1337
 
 #########################################################
 # this is nor relavant for you and only use for example #

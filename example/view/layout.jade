@@ -21,12 +21,14 @@ html(lang="en")
             a(href='/checkout') Checkout
           li
             a(href='/overview') Order history
+
     div(class='container')
       - if(messages)
         each msg in messages
           div(class="alert alert-" + msg.type)
             | #{msg.desc}
             button(class="close", data-dismiss="alert") &times;
+
       block content
 
     script.

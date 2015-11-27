@@ -1,13 +1,11 @@
 var Paymnd = require('../index'),
   async = require('async'),
   mongoose = Paymnd.Model.Resource,
-  uuid = require('node-uuid');
+  uuid = require('node-uuid'),
+  Promise = require('bluebird');
 
 exports.index = function (req, res) {
-  res.locals.session = req.session;
-  var flash = req.flash('info');
-  var messages = flash.length > 0 ? flash[0].message : null;
-  res.render('index', {messages: messages});
+  res.render('index');
 };
 
 exports.order = function (req, res) {
@@ -54,7 +52,7 @@ exports.order = function (req, res) {
   function(err){
     if(!err) {
       console.log('ORDER SUCCESS');
-      req.flash('info', { message : [{desc: "Ihr produkt wurde erfolgreich in den Warenkorb gelegt", type: "info"}]});
+      req.flash('info', { message : [{desc: "Product was successfully added to cart", type: "info"}]});
     } else {
       console.log('ERRR:', err);
       req.flash('info', { message : [{desc: err, type: "danger"}]});
@@ -68,8 +66,7 @@ exports.checkoutBefore = function(req, res, next) {
   var Order = mongoose.model('Order');
 
   if(!req.session.order) {
-    console.log('SESSION: ', req.session);
-    req.flash('info', { message : [{desc: 'Ihr Warenkorb ist leer', type: "danger"}]});
+    req.flash('info', { message : [{desc: 'Your cart is empty', type: "danger"}]});
     return res.redirect('/');
   }
 
@@ -88,14 +85,12 @@ exports.checkoutBefore = function(req, res, next) {
 };
 
 exports.checkoutGet = function (req, res) {
-  console.log('Get:');
   res.render('checkout');
 };
 
 exports.checkoutPost = function(req, res) {
   //var Order = mongoose.model('Payment')
   var order = res.locals.order;
-  console.log('Checkout POST');
 
   // preise müssen an das payment in cent werten übergeben werden
   var amount = order.amount * 100;
@@ -103,15 +98,15 @@ exports.checkoutPost = function(req, res) {
   Paymnd.Vendor.paymentCreate({
     orderId: order.orderId,
     amount: amount, // total price
-    // Übergabe der Payment Methode, im Example kommt es als POST param
+    // vendor method name
     method: req.body.payment
   },{
     order: {
-      description: 'Test Bestellung',
+      description: 'Test Order',
       itemList: [{
         quantity: 1,
-        name: 'Eier',
-        price: amount, // muss ein Integer sein von Typ Number
+        name: 'Test Product',
+        price: amount, // integer
         currency: 'EUR' // optional, when nicht gesetzt mach die Vendor Method Paypal es automatisch
       }]
     },
@@ -127,49 +122,41 @@ exports.checkoutPost = function(req, res) {
     customer: {
       id: 4234567894, // User Id is needed
       firstName: 'Alexander',
-      lastName: 'Tester',
+      lastName: 'Xander',
       ip: '62.157.236.170' // User IP is needed
     }
   })
     .catch(function(err) {
       console.error('ERR:', JSON.stringify(err, null, 2));
-      res.render('checkout');
+      req.flash('info', { message : [{desc: 'Error on create payment', type: "warning"}]});
+      res.redirect('/checkout');
     })
     .then(function(result) {
-      if(result.status == 'OK' && result.action == 'redirect') {
-        delete req.session.order;
-        res.redirect(result.redirectUrl);
-        return;
-      } else if(result.status == 'ERROR') {
-        req.flash('info', { message : [{desc: 'Error on create payment', type: "warning"}]});
-        res.redirect('/');
-        return;
+      if(result.status == 'OK' && result.redirect) {
+        // redirect to the next payment step
+        res.redirect(result.redirect);
       } else {
-        req.flash('info', { message : [{desc: 'Payment create Successful', type: "success"}]});
-        res.redirect('/');
+        req.flash('info', { message : [{desc: 'Payment create successful', type: "success"}]});
+        res.redirect('/success');
       }
     });
 };
 
 exports.successGet = function (req, res) {
-  console.log('successGet:', req.query);
+  delete req.session.order;
   res.render('success');
 };
 
 exports.cancelGet = function (req, res) {
-  console.log('cancelGet:', req.query);
   res.render('cancel');
 };
 
 exports.errorGet = function (req, res) {
-  console.log('Error:', req.query);
   res.render('error');
 };
 
 // diese Methode zeigt wie man selber ein Execute ausführen kann
 exports.executeGet = function (req, res, next) {
-  console.log('paymentExecuteGet:', req.query);
-
   Paymnd.Vendor.paymentExecute(req.query.orderId)
     .then(function() {
     "use strict";
@@ -178,65 +165,75 @@ exports.executeGet = function (req, res, next) {
 };
 
 exports.overviewGet = function (req, res) {
+
+  console.log('OVERVIEW:');
+
   var Order = mongoose.model('Order'),
     Payment = Paymnd.Model.Payment.Model;
 
-  async.waterfall([
-    function(callback){
-      Order.find({}, null, {sort: {createdAt: -1}}, function(err, orders) {
-        callback(err, orders);
-      });
-    },
-    function(orders, callback) {
+
+  new Promise(function(res, rej) {
+    Order.find({}, null, {sort: {createdAt: -1}}, function(err, orders) {
+      err ? rej(err) : res(orders);
+    });
+  })
+    .then(function(orders) {
       var newOrders = [];
-      async.each(orders, function(order, cb) {
-        Payment.getByOrderId(order.orderId, function(err, payment) {
-          if(payment) {
-            newOrders.push({
-              order: order,
-              payment: payment
-            });
-          }
-          cb(err);
+
+      return Promise.all(orders.map(function(order) {
+        return new Promise(function(res, rej) {
+          Payment.getByOrderId(order.orderId, function(err, payment) {
+            if(payment) {
+              newOrders.push({
+                order: order,
+                payment: payment
+              });
+
+              res(payment);
+            } else {
+              rej(err);
+            }
+          });
         });
-      }, function(err) {
-        callback(err, newOrders);
+      })).then(function() {
+        return newOrders;
+      }).catch(function(err) {
+        console.log('ERRRRRR::  ', err.stack);
+
+        return newOrders;
       });
-    }
-    ], function (err, result) {
-    //console.log('Res:', result);
-    res.render('overview', {orders: result});
-  });
+    })
+    .then(function(result) {
+      res.render('overview', {orders: result});
+    }).catch(function(result) {
+      res.render('overview', {orders: []});
+    });
 };
 
-
 exports.refundGet = function (req, res) {
-  console.log('refundGet:', req.query);
 
   Paymnd.Vendor.paymentRefund(req.query.orderId)
     .then(function() {
       req.flash('info', { message : [{desc: 'Refund succesful', type: "success"}]});
-      res.redirect('/');
+      res.redirect('/overview');
     })
     .catch(function(err) {
       console.log('REFUND ERROR: ', err, err.stack);
       req.flash('info', { message : [{desc: 'Error on refund - ' + err, type: "danger"}]});
-      res.redirect('/');
+      res.redirect('/overview');
     });
 };
 
 exports.cancelPaymentGet = function (req, res) {
-  console.log('cancelPaymentGet:', req.query);
-
 
   Paymnd.Vendor.paymentCancel(req.query.orderId)
     .then(function() {
-      req.flash('info', { message : [{desc: 'Refund succesful', type: "success"}]});
-      res.redirect('/');
+      req.flash('info', { message : [{desc: 'Cancel succesful', type: "success"}]});
+      res.redirect('/overview');
     })
     .catch(function(err) {
       console.log('REFUND ERROR: ', err, err.stack);
-      req.flash('info', { message : [{desc: 'Error on refund - ' + err, type: "danger"}]});
-      res.redirect('/');
+      req.flash('info', { message : [{desc: 'Error on cancel - ' + err, type: "danger"}]});
+      res.redirect('/overview');
     });
 };

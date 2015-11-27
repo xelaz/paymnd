@@ -1,12 +1,10 @@
 [{
   "name"      : "paymnd",
-  "script"    : "./app.js",
-  "instances" : "1",
-  "error_file" : "./log/error.log",
-  "out_file" : "./log/out.log",
-  "watch"       : true,
-  "ignore_watch": ["[\\/\\\\]\\./", "log$","runtime\\.json$"],
-  "max_restarts": 1,
+  "script"    : "./example/app.js",
+  "error_file" : "./example/log/error.log",
+  "out_file" : "./example/log/out.log",
+  "watch"       : ["example/**/*", "lib/**/*"],
+  "ignore_watch": ["[\\/\\\\]\\./", "log$","runtime\\.json$", "session", "\\.jade$"],
   "merge_logs"  : true,
   "env"         : {
     "NODE_ENV"    : "development",

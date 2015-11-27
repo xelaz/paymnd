@@ -2,7 +2,7 @@ extends ./layout.jade
 
 block content
   div
-    h1 Bestellung
+    h1 Order
 
     div
       div: strong OrderId: #{order.orderId}
@@ -13,16 +13,26 @@ block content
     hr
 
     form(method='post',class='form-horizontal')
-      fieldset(id='ccData',style='display:none;')
-        legend Kreditkarten Daten
+
+      fieldset
+        legend Payment
         div(class='form-group')
-          lable(for='ccType',class='col-sm-2 control-label') KreditkartenTyp&nbsp;
+          lable(for='payment',class='col-sm-2 control-label') Type&nbsp;
+          div(class='col-sm-10')
+            select(name='payment', id='payment', class="form-control")
+              each title, type in payments
+                option(value=type)= title
+
+      fieldset(id='ccData',style='display:none;')
+        legend Credit card
+        div(class='form-group')
+          lable(for='ccType',class='col-sm-2 control-label') Credit Card Type&nbsp;
           div(class='col-sm-10')
             select(name='ccType', id='ccType', class="form-control")
               each title, type in { visa: 'Visa', mastercard: 'Mastercard', amex: 'Amex', discover: 'Discover' }
                 option(value=type)= title
         div(class='form-group')
-          lable(for='ccNumber',class='col-sm-2 control-label') Nummer&nbsp;
+          lable(for='ccNumber',class='col-sm-2 control-label') Number&nbsp;
           div(class='col-sm-10')
             input(name='ccNumber',value='4111111111111111',id='ccNumber',maxlength='16',placeholder='4111111111111111')
         div(class='form-group')
@@ -37,19 +47,12 @@ block content
           lable(for='ccCvv2',class='col-sm-2 control-label') Prüfziffer&nbsp;
           div(class='col-sm-10')
             input(name='ccCvv2',value='666',id='ccCvv2',maxlength='4',placeholder='111')
+
       fieldset
-        legend Bezahlart
-        div(class='form-group')
-          lable(for='payment',class='col-sm-2 control-label') Bezahlart&nbsp;
-          div(class='col-sm-10')
-            select(name='payment', id='payment', class="form-control")
-              each title, type in payments
-                option(value=type)= title
-      fieldset
-        legend Abschließen
+        legend Confirm
         div(class='form-group')
           div(class='col-sm-offset-2 col-sm-10')
-            button(type='submit',class='btn btn-default') Bestellen
+            button(type='submit',class='btn btn-default') Order now
 
   script.
     $('#payment').change(function() {
