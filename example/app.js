@@ -14,46 +14,24 @@ if (config.debug.verbose) {
 }
 
 var
-  // First CALL must initialize payme
-  // Init with Options
-  Paymnd = require('../index')(config.paymnd);
+  // Load Paymnd
+  Paymnd = require('../');
 
 var http = require('http'),
   debug = require('debug')('paymnd:app'),
   express = require('express'),
-  routes = require('./routes'),
   session = require('express-session'),
   FileStore = require('session-file-store')(session),
   path = require('path'),
   flash = require('connect-flash'),
-  models = require('./models'),
   bodyParser = require('body-parser'),
   morgan = require('morgan'),
   cookieParser = require('cookie-parser'),
   errorHandler = require('errorhandler');
 
 // Or some cases if you want in other location setup it after require
-// var Paymnd = require('../index');
+// var Paymnd = require('../');
 // ...
-
-//Paymnd.Error.Payment();;
-debug('RegisterdVendors: %s', Paymnd.Vendor.getVendorKeys());
-debug('RegisterdPayments: %s', Paymnd.Vendor.getMethodKeys());
-debug('Payment Paypal: %s', JSON.stringify(Paymnd.Vendor.getByMethod('paypal'), false, 2));
-debug('Payment PaypalObject: %o', Paymnd.Vendor.getByMethod('paypal'));
-
-
-//var test = require('./test');
-
-//Paymnd.Vendor.getPayment('cc').api.create();
-
-/*Paymnd.Model.Transaction.getTxnByOrderId('0912a040-5c0e-11e3-a7a6-59b3014c7812', function(err, docs) {
-  console.log('#', err, docs);
-});
-*/
-
-//console.log('###', Paymnd.Vendor.getMethod('paypal').convertStateToStatus('created', 'create'));
-
 
 /**
  * Events wenn sich ein Payment ändert
@@ -62,42 +40,6 @@ debug('Payment PaypalObject: %o', Paymnd.Vendor.getByMethod('paypal'));
  * somit kann man drauf reagieren und dementsprechend die
  * Bestellung anpassen
  */
-
-var Order = require('./models').Order;
-Paymnd.Model.Payment.Event.on('statusChanged', function(payment) {
-  console.log('####statusChanged', payment);
-});
-
-Paymnd.Model.Payment.Event.on('statusDebited', function(payment) {
-  Order.findOne({orderId: payment.orderId}, function(err, doc) {
-    if(err || !doc) return;
-
-    doc.status = 'debit';
-    doc.save();
-  });
-  console.log('####statusDebited', payment);
-});
-
-Paymnd.Model.Payment.Event.on('statusCanceled', function(payment) {
-  Order.findOne({orderId: payment.orderId}, function(err, doc) {
-    if(err || !doc) return;
-
-    doc.status = 'cancel';
-    doc.save();
-  });
-  console.log('####statusCanceled', payment);
-});
-
-Paymnd.Model.Payment.Event.on('statusRefunded', function(payment) {
-  Order.findOne({orderId: payment.orderId}, function(err, doc) {
-    if(err) return;
-
-    doc.status = 'refund';
-    doc.save();
-  });
-  console.log('####statusRefunded', payment);
-});
-
 
 var app = express();
 
@@ -137,44 +79,103 @@ app.use(errorHandler({
 app.locals.inspect = require('util').inspect;
 
 
-app.get('/', routes.index);
-app.get('/order', routes.order);
-app.all('/checkout', routes.checkoutBefore);
-app.get('/checkout', routes.checkoutGet);
-app.post('/checkout', routes.checkoutPost);
+Paymnd(config.paymnd).then(function() {
+  var routes = require('./routes'),
+    models = require('./models'),
+    Order = require('./models').Order;
 
-app.get('/success', routes.successGet);
-app.get('/cancel', routes.cancelGet);
-app.get('/error', routes.errorGet);
-app.get('/overview', routes.overviewGet);
-app.get('/refund', routes.refundGet);
-app.get('/execute', routes.executeGet);
-app.get('/cancel-payment', routes.cancelPaymentGet);
 
-/**
- * use Paymnd as express middleware
- */
+  app.get('/', routes.index);
+  app.get('/order', routes.order);
+  app.all('/checkout', routes.checkoutBefore);
+  app.get('/checkout', routes.checkoutGet);
+  app.post('/checkout', routes.checkoutPost);
 
-/**
- * init full standalone app with Payment pings
- * without your express infrastructure and nesting
- */
+  app.get('/success', routes.successGet);
+  app.get('/cancel', routes.cancelGet);
+  app.get('/error', routes.errorGet);
+  app.get('/overview', routes.overviewGet);
+  app.get('/refund', routes.refundGet);
+  app.get('/execute', routes.executeGet);
+  app.get('/cancel-payment', routes.cancelPaymentGet);
+
+//Paymnd.Error.PaymentError();;
+  debug('RegisterdVendors: %s', Paymnd.Vendor.getVendorKeys());
+   debug('RegisterdPayments: %s', Paymnd.Vendor.getMethodKeys());
+   debug('Payment Paypal: %s', JSON.stringify(Paymnd.Vendor.getByMethod('paypal'), false, 2));
+   debug('Payment PaypalObject: %o', Paymnd.Vendor.getByMethod('paypal'));
+
+
+  Paymnd.Model.Payment.getEvent().on('changed', function(payment) {
+    console.log('####statusChanged', payment);
+  });
+
+  Paymnd.Model.Payment.getEvent().on('debit', function(payment) {
+
+    Order.findOne({orderId: payment.orderId}, function(err, doc) {
+      if(err || !doc) return;
+
+      doc.status = 'debit';
+      doc.save(function(err) {
+        err && console.log('ERROR onsave: ', err.stack);
+        console.log('####status: ', payment);
+      });
+    });
+  });
+
+  Paymnd.Model.Payment.getEvent().on('cancel', function(payment) {
+    Order.findOne({orderId: payment.orderId}, function(err, doc) {
+      if(err || !doc) return;
+
+      doc.status = 'cancel';
+      doc.save(function(err) {
+        err && console.log('ERROR onsave: ', err.stack);
+        console.log('####status: ', payment);
+      });
+    });
+  });
+
+  Paymnd.Model.Payment.getEvent().on('refund', function(payment) {
+    Order.findOne({orderId: payment.orderId}, function(err, doc) {
+      if(err) return;
+
+      doc.status = 'refund';
+      doc.save(function(err) {
+        err && console.log('ERROR onsave: ', err.stack);
+        console.log('####status: ', payment);
+      });
+    });
+  });
+
+
+  /**
+   * use Paymnd as express middleware
+   */
+
+  /**
+   * init full standalone app with Payment pings
+   * without your express infrastructure and nesting
+   */
 //Paymnd.Middleware.setup();
 
-/**
- * init full standalone app with Payment pings
- * without your express infrastructure and nesting
- */
-Paymnd.Middleware.setup(app);
+  /**
+   * init full standalone app with Payment pings
+   * without your express infrastructure and nesting
+   */
+  Paymnd.Middleware.setup(app);
 
-/**
- * or init only ping middleware if you have your own express app infrastructure
- * and nested your app
- */
+  /**
+   * or init only ping middleware if you have your own express app infrastructure
+   * and nested your app
+   */
 //app.use(Paymnd.Middleware.setup(app).getApp());
 
 //require('./test');
 
-http.createServer(app).listen(app.get('port'), function(){
-  console.log("Express server listening on port " + app.get('port'));
+  http.createServer(app).listen(app.get('port'), function(){
+    console.log("Express server listening on port " + app.get('port'));
+  });
+}).catch(function(err) {
+  console.log('PAYMND ERROR:', err.stack);
 });
+

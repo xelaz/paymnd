@@ -1,6 +1,6 @@
 var mongoose = require('mongoose'),
   Schema = mongoose.Schema,
-  Paymnd = require('../index');
+  Paymnd = require('../');
 
 var OrderSchema = {
   orderId: String,
@@ -21,4 +21,4 @@ var OrderSchema = {
   }
 };
 
-module.exports.Order = Paymnd.Model.Resource.model('Order', new Schema(OrderSchema));
+module.exports.Order = Paymnd.Model.Connection.model('Order', new Schema(OrderSchema));

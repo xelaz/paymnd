@@ -1,6 +1,6 @@
-var Paymnd = require('../index'),
+var Paymnd = require('../'),
   async = require('async'),
-  mongoose = Paymnd.Model.Resource,
+  mongoose = Paymnd.Model.Connection,
   uuid = require('node-uuid'),
   Promise = require('bluebird');
 
@@ -11,6 +11,8 @@ exports.index = function (req, res) {
 exports.order = function (req, res) {
   res.locals.session = req.session;
   var Order = mongoose.model('Order');
+
+  console.log('Order: ', req.query);
 
   async.waterfall([
     function(callback){
@@ -165,41 +167,28 @@ exports.executeGet = function (req, res, next) {
 };
 
 exports.overviewGet = function (req, res) {
-
-  console.log('OVERVIEW:');
-
   var Order = mongoose.model('Order'),
-    Payment = Paymnd.Model.Payment.Model;
-
+    Payment = Paymnd.Model.Payment;
 
   new Promise(function(res, rej) {
     Order.find({}, null, {sort: {createdAt: -1}}, function(err, orders) {
-      err ? rej(err) : res(orders);
-    });
-  })
+        err ? rej(err) : res(orders);
+      });
+    })
     .then(function(orders) {
       var newOrders = [];
 
       return Promise.all(orders.map(function(order) {
-        return new Promise(function(res, rej) {
-          Payment.getByOrderId(order.orderId, function(err, payment) {
-            if(payment) {
-              newOrders.push({
-                order: order,
-                payment: payment
-              });
-
-              res(payment);
-            } else {
-              rej(err);
-            }
+        return Payment.getByOrderId(order.orderId)
+          .then((payment) => {
+            newOrders.push({
+              order: order,
+              payment: payment
+            });
+          }).catch((err) => {
+            console.log('Error: ', err.stack);
           });
-        });
       })).then(function() {
-        return newOrders;
-      }).catch(function(err) {
-        console.log('ERRRRRR::  ', err.stack);
-
         return newOrders;
       });
     })
