@@ -17,7 +17,8 @@ block content
           strong= 'Method: ' + item.payment.method
           br
           strong= 'Vendor: ' + item.payment.vendor
-        a.btn.btn-danger(href='/refund?orderId=' + item.order.orderId) Refund
-        a.btn.btn-success(href='/execute?orderId=' + item.order.orderId) Execute
-        a.btn.btn-warning(href='/cancel-payment?orderId=' + item.order.orderId) Cancel
+        .btn-group.btn-group-sm
+          a.btn.btn-danger(href='/refund?orderId=' + item.order.orderId) Refund
+          a.btn.btn-success(href='/execute?orderId=' + item.order.orderId) Execute
+          a.btn.btn-warning(href='/cancel-payment?orderId=' + item.order.orderId) Cancel
 
