@@ -33,14 +33,6 @@ var http = require('http'),
 // var Paymnd = require('../');
 // ...
 
-/**
- * Events wenn sich ein Payment ändert
- *
- * Payment trigert Event wenn sich ein Payment ändert,
- * somit kann man drauf reagieren und dementsprechend die
- * Bestellung anpassen
- */
-
 var app = express();
 
 app.set('template_engine', 'jade');
