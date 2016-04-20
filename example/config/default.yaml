@@ -97,6 +97,8 @@ paymnd:
       options:
         user: "root"
         pass: ""
+        config:
+          autoIndex: false
 
 
 server:
