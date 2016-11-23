@@ -1,7 +1,7 @@
 var Paymnd = require('../'),
   async = require('async'),
   mongoose = Paymnd.Model.Connection,
-  uuid = require('node-uuid'),
+  uuid = require('uuid'),
   Promise = require('bluebird');
 
 exports.index = function (req, res) {
