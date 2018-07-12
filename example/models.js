@@ -1,8 +1,8 @@
-var mongoose = require('mongoose'),
-  Schema = mongoose.Schema,
-  Paymnd = require('../');
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+const Paymnd = require('../lib/index');
 
-var OrderSchema = {
+const OrderSchema = {
   orderId: String,
 
   amount: Number,

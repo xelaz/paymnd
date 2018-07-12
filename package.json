@@ -1,6 +1,6 @@
 {
   "name": "paymnd",
-  "version": "0.2.10",
+  "version": "0.2.11",
   "main": "./lib/index.js",
   "author": {
     "name": "xelaz"
@@ -10,8 +10,8 @@
     "url": "https://github.com/xelaz/paymnd"
   },
   "scripts": {
-    "start": "node example/index.js",
-    "pm2": "pm2 delete paymnd; pm2 start example/pm2.json",
+    "start": "node example/app.js",
+    "pm2": "pm2 delete paymnd; pm2 start example/pm2.json; tail -f example/log/*.log",
     "test": "NODE_CONFIG_DIR=./example/config ./node_modules/mocha/bin/mocha",
     "test:watch": "npm run test -- --watch"
   },
@@ -21,6 +21,7 @@
     "extend": "^3.0.1",
     "mongoose": "^5.2.3",
     "paypal-rest-sdk": "1.6.8",
+    "request": "^2.87.0",
     "request-promise": "^4.2.2",
     "uuid": "^3.3.2",
     "xml2js": "^0.4.19"
@@ -42,7 +43,7 @@
     "should": "~1.2.2"
   },
   "engines": {
-    "node": ">=4.0.0"
+    "node": ">=6.10.0"
   },
   "readmeFilename": "README.md",
   "license": "MIT"

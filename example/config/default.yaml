@@ -93,13 +93,10 @@ paymnd:
   # set your mongo credentials to create own connection
   db:
     mongo:
-      uri:   "localhost:27017/paymnd"
+      uri:   "mongodb://root:123456@localhost:27017/paymnd"
       options:
-        user: "root"
-        pass: ""
-        config:
-          autoIndex: false
-
+        useNewUrlParser: true
+        autoIndex: false
 
 server:
   # server name to listen is used in example or standalone
@@ -110,8 +107,6 @@ server:
 #########################################################
 # this is nor relavant for you and only use for example #
 #########################################################
-
-
 
 debug:
   verbose: false

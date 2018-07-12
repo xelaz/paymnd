@@ -13,11 +13,10 @@ if (config.debug.verbose) {
   process.env.DEBUG_COLORS = true;
 }
 
-var
-  // Load Paymnd
-  Paymnd = require('../');
+ // Load Paymnd
+const Paymnd = require('../lib/index');
 
-var http = require('http'),
+const http = require('http'),
   debug = require('debug')('paymnd:app'),
   express = require('express'),
   session = require('express-session'),
@@ -33,7 +32,7 @@ var http = require('http'),
 // var Paymnd = require('../');
 // ...
 
-var app = express();
+const app = express();
 
 app.set('template_engine', 'jade');
 app.set('domain', config.server.server);
